@@ -10,7 +10,7 @@ from google import genai
 from google.genai import types
 
 # 💡 공통 비즈니스 로직 및 프롬프트 템플릿 모듈 재사용
-from user_type_select import get_course_data, generate_llm_prompt
+from ai_chat.user_type_select import get_course_data, generate_llm_prompt
 
 # 환경변수 로드
 load_dotenv()
