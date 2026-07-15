@@ -109,10 +109,15 @@ def get_course_data(selected_course_id: str) -> Dict[str, Any]:
                         # 중복 추가 방지
                         if item.get("title") not in [p['title'] for p in found_places]:
                             found_places.append({
+                                "contentid": item.get("contentid"),
                                 "title": item.get("title"),
                                 "addr1": item.get("address", "주소 정보 없음"),
-                                "tel": "정보없음", # 기존 데이터에 tel 필드 보존 확인 필요
-                                "firstimage": item.get("image", "")
+                                "addr2": item.get("addr2", "상세주소 정보 없음"),
+                                "tel": item.get("tel", "번호 정보 없음"), # 기존 데이터에 tel 필드 보존 확인 필요
+                                "firstimage": item.get("image", ""),
+                                "firstimage2": item.get("image2", ""),
+                                "mapx": item.get("mapx", 0.2),
+                                "mapy": item.get("mapy", 0.2)
                             })
             except json.JSONDecodeError:
                 continue
