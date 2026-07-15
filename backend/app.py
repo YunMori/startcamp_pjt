@@ -81,6 +81,21 @@ class ReviewResponse(BaseModel):
         from_attributes = True
 
 
+# 비밀번호 검증용 스키마
+class PasswordCheck(BaseModel):
+    password: str = Field(..., min_length=1)
+
+
+# 리뷰 수정 입력 스키마 (부분 업데이트 허용)
+class ReviewUpdate(BaseModel):
+    nickname: Optional[str] = None
+    password: str = Field(..., min_length=1, description="현재 비밀번호 (수정/삭제 권한 확인용)")
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    content: Optional[str] = None
+    # 프론트에서 'text'라는 필드를 보낼 가능성 대비
+    text: Optional[str] = None
+
+
 app = FastAPI(title="LocalHub Step 1 Server")
 
 # CORS 전체 허용 (FE 개발 편의용)
@@ -143,6 +158,57 @@ def create_review(review: ReviewCreate, db: Session = Depends(get_db)):
 def get_festival_reviews(content_id: str, db: Session = Depends(get_db)):
     reviews = db.query(ReviewModel).filter(ReviewModel.content_id == content_id).all()
     return reviews
+
+
+# 비밀번호 검증 엔드포인트 — 수정/삭제 전 비밀번호 확인용
+@app.post("/api/reviews/{review_id}/verify")
+def verify_review_password(review_id: int, payload: PasswordCheck, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.review_id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="존재하지 않는 리뷰입니다.")
+    if review.password != payload.password:
+        raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다.")
+    return {"status": "success"}
+
+
+# 리뷰 수정 (비밀번호 확인 필요)
+@app.put("/api/reviews/{review_id}", response_model=ReviewResponse)
+def update_review(review_id: int, payload: ReviewUpdate, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.review_id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="존재하지 않는 리뷰입니다.")
+    # 비밀번호 검증
+    if review.password != payload.password:
+        raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다.")
+
+    if payload.nickname is not None:
+        review.nickname = payload.nickname
+    if payload.rating is not None:
+        review.rating = payload.rating
+    # 프론트에서 'text'를 보낼 수 있으므로 우선순위를 둠
+    if payload.content is not None:
+        review.content = payload.content
+    elif payload.text is not None:
+        review.content = payload.text
+
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    return review
+
+
+# 리뷰 삭제 (비밀번호 필요)
+@app.delete("/api/reviews/{review_id}")
+def delete_review(review_id: int, payload: PasswordCheck, db: Session = Depends(get_db)):
+    review = db.query(ReviewModel).filter(ReviewModel.review_id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="존재하지 않는 리뷰입니다.")
+    if review.password != payload.password:
+        raise HTTPException(status_code=403, detail="비밀번호가 일치하지 않습니다.")
+
+    db.delete(review)
+    db.commit()
+    return {"status": "deleted"}
 
 
 if __name__ == "__main__":
