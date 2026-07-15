@@ -7,9 +7,10 @@ const props = defineProps({
 
 const { answer } = useChatStore()
 
-function chipClass(label) {
+// chip: { label, value }
+function chipClass(chip) {
   if (!props.message.answered) return 'chip'
-  return props.message.selected === label ? 'chip selected' : 'chip disabled'
+  return props.message.selected === chip.label ? 'chip selected' : 'chip disabled'
 }
 </script>
 
@@ -20,13 +21,13 @@ function chipClass(label) {
       <div class="question">{{ message.text }}</div>
       <div class="chips">
         <button
-          v-for="label in message.chips"
-          :key="label"
-          :class="chipClass(label)"
+          v-for="chip in message.chips"
+          :key="chip.label"
+          :class="chipClass(chip)"
           :disabled="message.answered"
-          @click="answer(message.id, label)"
+          @click="answer(message.id, chip)"
         >
-          {{ label }}
+          {{ chip.label }}
         </button>
       </div>
     </div>

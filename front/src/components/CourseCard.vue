@@ -1,16 +1,23 @@
 <script setup>
 import KakaoMiniMap from './KakaoMiniMap.vue'
 import { usePanelStore } from '../stores/usePanelStore'
+import { useChatStore } from '../stores/useChatStore'
 
 const props = defineProps({
   course: { type: Object, required: true },
 })
 
 const { openPanel } = usePanelStore()
+const { selectCourse } = useChatStore()
+
+function onSelect() {
+  openPanel(props.course.id)
+  selectCourse(props.course.id) // Gemini 스토리텔링 메시지를 대화에 추가
+}
 </script>
 
 <template>
-  <button class="card" @click="openPanel(course.id)">
+  <button class="card" @click="onSelect">
     <KakaoMiniMap :spots="course.spots" />
     <div class="body">
       <div class="thumb">{{ course.emoji }}</div>

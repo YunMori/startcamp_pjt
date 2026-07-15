@@ -8,3 +8,4 @@ pydantic==2.13.4
 # pip install -r requirements.txt 입력하면 패키지 다운가능
 
 google-genai==2.11.0 # Gemini API 사용을 위한 라이브러리 추가
+python-dotenv==1.0.1 # .env에서 GEMINI_API_KEY 로드

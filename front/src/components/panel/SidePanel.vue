@@ -67,8 +67,9 @@ async function handleEdit(form) {
   const reviewId = panel.activeReviewId
   await reviewStore.editReview(panel.courseId, reviewId, {
     ...form,
-    // 폼에서 새 비밀번호를 입력하지 않았으면 기존 비밀번호 유지
-    password: form.password || gate.verifiedPassword,
+    // 권한 확인은 게이트에서 검증한 비밀번호로, 폼의 비밀번호는 새 비밀번호(선택)
+    password: gate.verifiedPassword,
+    newPassword: form.password,
   })
   showDetail(reviewId)
 }

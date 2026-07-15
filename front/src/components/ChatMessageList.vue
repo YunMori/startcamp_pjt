@@ -27,7 +27,7 @@ watch(
       <UserBubble v-else-if="m.role === 'user'" :text="m.text" />
       <TypingIndicator v-else-if="m.kind === 'typing'" />
       <ChipsMessage v-else-if="m.kind === 'chips'" :message="m" />
-      <CourseCards v-else-if="m.kind === 'cards'" />
+      <CourseCards v-else-if="m.kind === 'cards'" :course-ids="m.courseIds" />
     </template>
   </div>
 </template>
