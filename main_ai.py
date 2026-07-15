@@ -2,10 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 
-# ❌ 기존 임포트 삭제
-# import google.generativeai as genai 
-
-# ✅ 새로운 임포트 추가
+# 새로운 공식 구글 패키지 임포트
 from google import genai
 from google.genai import types
 
@@ -22,11 +19,8 @@ if not GEMINI_API_KEY:
     print("🚨 에러: .env 파일에 GEMINI_API_KEY가 없습니다!")
     exit()
 
-# ✅ 새로운 클라이언트 초기화 방식
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-
-# model = genai.GenerativeModel('gemini-1.5-flash')
 # ==========================================
 # 2. JSON 데이터 전처리 파이프라인
 # ==========================================
@@ -41,12 +35,10 @@ file_paths = [
     'data/대전_충청권_축제공연행사.json'
 ]
 
-# 결과를 저장할 폴더가 없다면 자동으로 생성
 os.makedirs('pre_result', exist_ok=True)
 
 print("🔄 JSON 데이터 전처리를 시작합니다...")
 for source_file in file_paths:
-    # try-except를 for문 안으로 이동시켜야 파일이 없어도 반복문이 끊기지 않습니다.
     try:
         with open(source_file, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
@@ -68,34 +60,23 @@ print("✅ 전처리 완료!\n")
 # 3. 챗봇 성향 분석 및 프롬프트 조립
 # ==========================================
 if __name__ == "__main__":
-    # 사용자 성향 분석 설문 실행
+    # 사용자 성향 분석 설문 실행 (로컬 콘솔용)
     answers = run_terminal_frontend()
     
     selected_course_id = answers["preference"]
     print(f"\n[서버 로그] 선택된 코스 ID: {selected_course_id}")
     
-    # DB에서 코스 정보 가져오기
+    # 공통 모듈에서 데이터 및 기본 프롬프트 가져오기
     course_data = get_course_data(selected_course_id)
-    
-    # LLM 프롬프트 생성
     final_prompt = generate_llm_prompt(course_data)
     
-    # 추가: 시스템 프롬프트에 JSON 출력 포맷 지시를 한 번 더 명확히 합침
+    # 💡 [개선] Gemini에게 쓸데없는 좌표 생성을 시키지 않고, 오직 message만 요구합니다.
     final_prompt += """
     
     [출력 지시사항]
     반드시 아래 JSON 형식으로만 출력해. 백틱(```json)이나 다른 설명은 절대 포함하지 마.
     {
-        "message": "사용자님에게 추천 코스를 안내해 드립니다! ... (여기에 스토리를 작성해)",
-        "places": [
-            {
-                "name": "장소명",
-                "lat": 0.0,
-                "lng": 0.0,
-                "image_url": "이미지 주소",
-                "address": "주소"
-            }
-        ]
+        "message": "사용자님에게 추천 코스를 안내해 드립니다! ... (각 장소의 매력과 동선을 자연스럽게 연결한 로맨틱 스토리텔링 작성)"
     }
     """
     
@@ -103,24 +84,41 @@ if __name__ == "__main__":
     print(final_prompt)
     
     # ==========================================
-    # 4. Gemini 1.5 Flash 호출 및 응답 출력
+    # 4. Gemini 3.5 Flash 호출 및 응답 출력
     # ==========================================
     print("\n🚀 Gemini API로 데이터를 전송하고 맞춤형 스토리를 생성 중입니다...\n")
     
     try:
-        # ✅ 새로운 API 호출 방식
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-3.5-flash',
             contents=final_prompt,
             config=types.GenerateContentConfig(
                 temperature=0.7,
                 response_mime_type="application/json",
             )
         )
-        print("🎉 [Gemini의 최종 응답 (완벽한 JSON 형태)] 🎉\n")
         
-        response_json = json.loads(response.text)
-        print(json.dumps(response_json, indent=4, ensure_ascii=False))
+        # 1. LLM의 감성 멘트 파싱
+        llm_result = json.loads(response.text)
+        
+        # 2. 신뢰할 수 있는 백엔드 DB 데이터와 안전하게 결합
+        final_json_data = {
+            "message": llm_result.get("message", "두 분만을 위한 로맨틱한 코스를 준비했습니다!"),
+            "places": []
+        }
+        
+        for db_place in course_data["places"]:
+            final_json_data["places"].append({
+                "name": db_place["title"],
+                "lat": float(db_place["mapy"]),
+                "lng": float(db_place["mapx"]),
+                "image_url": db_place["firstimage"],
+                "address": db_place["addr1"]
+            })
+
+        # 3. 최종 출력 확인
+        print("🎉 [서버 내부에서 최종 완성된 JSON 데이터] 🎉\n")
+        print(json.dumps(final_json_data, indent=4, ensure_ascii=False))
         
     except json.JSONDecodeError:
         print("🚨 에러: Gemini가 반환한 텍스트가 올바른 JSON 형식이 아닙니다.")

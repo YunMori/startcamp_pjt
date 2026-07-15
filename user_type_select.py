@@ -1,5 +1,7 @@
 import time
-
+import json
+import os
+from typing import Dict, Any
 # ==========================================
 # [백엔드] 1. 질문을 던지고 입력을 받는 헬퍼 함수
 # ==========================================
@@ -79,51 +81,55 @@ def user_type_select(user_answers, scores):
     best_course = max(scores, key=scores.get)
     user_answers["preference"] = best_course
 
-def get_course_data(selected_course_id):
-    # DB에 저장된 마스터 코스 데이터 풀 (실제로는 DB에서 Fetch 해옵니다)
-    course_pool = {
-        "course_A": {
-            "name": "대청호 물길 힐링 코스", 
-            "places": [
-                {"title": "대청호자연수변공원", "addr1": "대전광역시 동구 추동 328", "tel": "", "firstimage": "http://...image1.jpg"},
-                {"title": "카페 팡시온", "addr1": "대전광역시 동구 회남로275번길 227", "tel": "", "firstimage": "http://...image2.jpg"},
-                {"title": "더리스", "addr1": "대전광역시 동구 냉천로 34-8", "tel": "042-123-4567", "firstimage": "http://...image3.jpg"}
-            ]
-        },
-        "course_B": {
-            "name": "도룡동 실내 액티비티 코스", 
-            "places": [
-                {"title": "스몹 대전", "addr1": "대전광역시 유성구 엑스포로 1 신세계백화점 6층", "tel": "042-000-0000", "firstimage": "http://...image1.png"},
-                {"title": "더 빛나", "addr1": "대전광역시 유성구 엑스포로 131", "tel": "042-111-1111", "firstimage": "http://...image2.jpg"},
-                {"title": "엑스포다리 야경", "addr1": "대전광역시 유성구 도룡동", "tel": "", "firstimage": "http://...image3.jpg"}
-            ]
-        },
-        "course_C": {
-            "name": "소제동 레트로 감성 코스", 
-            "places": [
-                {"title": "테미오래", "addr1": "대전광역시 중구 보문로205번길 13", "tel": "", "firstimage": "http://...image1.jpg"},
-                {"title": "치앙마이방콕", "addr1": "대전광역시 동구 철갑3길 8", "tel": "", "firstimage": "http://...image2.jpg"},
-                {"title": "볕 (수플레 카페)", "addr1": "대전광역시 동구 수향2길 7", "tel": "", "firstimage": "http://...image3.jpg"}
-            ]
-        },
-        "course_D": {
-            "name": "유성 도심 재즈&맥주 페스타 코스", 
-            "places": [
-                {"title": "유성재즈&맥주페스타", "addr1": "대전광역시 유성구 어은로 27 유림공원 일원", "tel": "042-611-2080", "firstimage": "http://...image1.jpg"},
-                {"title": "1984그수육집칼국수", "addr1": "대전광역시 유성구 원신흥남로42번길 5-22", "tel": "", "firstimage": "http://...image2.jpg"},
-                {"title": "유성온천 족욕체험장", "addr1": "대전광역시 유성구 봉명동 574", "tel": "", "firstimage": "http://...image3.jpg"}
-            ]
-        },
-        "course_E": {
-            "name": "공주 야밤 맥주축제 드라이브 코스", 
-            "places": [
-                {"title": "공주야밤 맥주축제", "addr1": "충청남도 공주시 금벽로 368 공주 금강신관공원 일원", "tel": "041-840-8404", "firstimage": "http://...image1.jpg"},
-                {"title": "공주 공산성", "addr1": "충청남도 공주시 웅진로 280", "tel": "", "firstimage": "http://...image2.jpg"},
-                {"title": "베이커리 밤마을", "addr1": "충청남도 공주시 백미고을길 5-13", "tel": "", "firstimage": "http://...image3.jpg"}
-            ]
-        }
+def get_course_data(selected_course_id: str) -> Dict[str, Any]:
+    # 1. 코스별 장소 리스트 매핑 (실제 데이터의 'title'과 정확히 일치해야 함)
+    #[cite: 24, 25, 29, 30]을 기반으로 실제 데이터의 title을 추출했습니다.
+    course_map = {
+        "course_A": ["대청댐", "장태산자연휴양림", "대청호자연수변공원"],
+        "course_B": ["스몹 대전", "대전아쿠아리움", "대전엑스포시민광장스케이트장"],
+        "course_C": ["테미오래", "소제동", "대동하늘공원"],
+        "course_D": ["유성온천문화축제", "유성온천공원", "촌놈들연탄구이 본점"],
+        "course_E": ["공주 공산성 [유네스코 세계유산]", "공주야밤 맥주축제", "베이커리 밤마을"]
     }
-    return course_pool[selected_course_id]
+
+    target_titles = course_map.get(selected_course_id, [])
+    found_places = []
+    
+    # 2. 전처리된 모든 파일 탐색
+    pre_result_dir = 'pre_result'
+    for filename in os.listdir(pre_result_dir):
+        file_path = os.path.join(pre_result_dir, filename)
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                for item in data:
+                    # 데이터 매칭
+                    if item.get("title") in target_titles:
+                        # 중복 추가 방지
+                        if item.get("title") not in [p['title'] for p in found_places]:
+                            found_places.append({
+                                "title": item.get("title"),
+                                "addr1": item.get("address", "주소 정보 없음"),
+                                "tel": "정보없음", # 기존 데이터에 tel 필드 보존 확인 필요
+                                "firstimage": item.get("image", "")
+                            })
+            except json.JSONDecodeError:
+                continue
+    
+    # 코스 이름 설정
+    course_names = {
+        "course_A": "대청호 물길 힐링 코스",
+        "course_B": "도룡동 실내 액티비티 코스",
+        "course_C": "소제동 레트로 감성 코스",
+        "course_D": "유성 도심 축제 데이트 코스",
+        "course_E": "공주 역사 & 야밤 축제 코스"
+    }
+
+    return {
+        "name": course_names.get(selected_course_id, "추천 데이트 코스"),
+        "places": found_places
+    }
 
 # ==========================================
 # [프론트엔드] 3. 터미널 기반 대화형 UI 시뮬레이터
@@ -166,21 +172,21 @@ def generate_llm_prompt(course_data):
         places_info += f"{i}. 장소명: {place['title']} / 주소: {place['addr1']} / 전화번호: {place.get('tel', '정보없음')} / 이미지URL: {place['firstimage']}\n"
         
     llm_prompt = f"""
-너는 대전/충청 데이트 코스를 친절하게 안내해 주는 로맨틱 가이드 챗봇이야.
-백엔드 알고리즘이 사용자 성향을 분석하여 아래의 데이트 코스 및 세부 장소 정보를 가져왔어.
+    너는 대전/충청 데이트 코스를 친절하게 안내해 주는 로맨틱 가이드 챗봇이야.
+    백엔드 알고리즘이 사용자 성향을 분석하여 아래의 데이트 코스 및 세부 장소 정보를 가져왔어.
 
-[추천 코스명]: {course_data['name']}
+    [추천 코스명]: {course_data['name']}
 
-[상세 장소 정보]
-{places_info}
+    [상세 장소 정보]
+    {places_info}
 
-[지시사항]
-1. 사용자의 성향과 이 코스가 왜 잘 어울리는지 공감하며 부드러운 톤으로 설명을 시작해라.
-2. 텍스트 형태는 반드시 다음과 같은 포맷을 유지해라.
-   "사용자님에게 [{course_data['name']}]를 추천해 드립니다! 이 코스는 [장소1]->[장소2]->[장소3] 순서로 정해져 있습니다. 각각의 장소 정보를 안내해 드릴게요."
-3. 그 다음, 제공된 [상세 장소 정보]의 장소명, 주소, 전화번호, 이미지 URL을 활용해서 각 장소의 매력과 동선을 대화하듯 매끄럽게 설명해라.
-4. 설명 마지막에는 이 코스가 사용자님의 성향과 얼마나 잘 어울리는지 대략적인 총평을 덧붙여라.
-"""
+    [지시사항]
+    1. 사용자의 성향과 이 코스가 왜 잘 어울리는지 공감하며 부드러운 톤으로 설명을 시작해라.
+    2. 텍스트 형태는 반드시 다음과 같은 포맷을 유지해라.
+    "사용자님에게 [{course_data['name']}]를 추천해 드립니다! 이 코스는 [장소1]->[장소2]->[장소3] 순서로 정해져 있습니다. 각각의 장소 정보를 안내해 드릴게요."
+    3. 그 다음, 제공된 [상세 장소 정보]의 장소명, 주소, 전화번호, 이미지 URL을 활용해서 각 장소의 매력과 동선을 대화하듯 매끄럽게 설명해라.
+    4. 설명 마지막에는 이 코스가 사용자님의 성향과 얼마나 잘 어울리는지 대략적인 총평을 덧붙여라.
+    """
     return llm_prompt
 
 # ==========================================
