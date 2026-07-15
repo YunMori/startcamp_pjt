@@ -1,0 +1,89 @@
+<<<<<<< HEAD
+# ==========================================
+# 1. OS & System Files (운영체제 임시 파일)
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# 2. IDEs & Editors (개발 도구 설정 파일)
+# ==========================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================================
+# 3. Node.js & Frontend (Vue 3 / Vite 관련)
+# ==========================================
+node_modules/
+/dist
+/dist-ssr
+*.local
+package-lock.json.log
+
+# ==========================================
+# 4. Environment & Secrets (민감 정보 - 필수 제외!)
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ==========================================
+# 5. Python & AI Chatbot (파이썬 가상환경 및 캐시)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Python Virtual Environments (가상환경)
+.venv
+venv
+ENV
+env/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ==========================================
+# 6. Database & Logs (로그 및 로컬 DB 파일)
+# ==========================================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.sqlite
+*.db
+=======
+.env
+>>>>>>> lcy
