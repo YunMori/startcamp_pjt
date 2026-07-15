@@ -21,11 +21,11 @@ def preprocess_poi_data(json_data):
             cleaned_item = {
                 "contentid": item.get("contentid"),
                 "title": item.get("title"),
-                "addr1": item.get("address", "주소 정보 없음"),
+                "addr1": item.get("addr1", "주소 정보 없음"),
                 "addr2": item.get("addr2", "상세주소 정보 없음"),
                 "tel": item.get("tel", "번호 정보 없음"), # 기존 데이터에 tel 필드 보존 확인 필요
-                "firstimage": item.get("image", ""),
-                "firstimage2": item.get("image2", ""),
+                "firstimage": item.get("firstimage", ""),
+                "firstimage2": item.get("firstimage2", ""),
                 "mapx": float(item.get("mapx", 0.1)),
                 "mapy": float(item.get("mapy", 0.1)),
             }
