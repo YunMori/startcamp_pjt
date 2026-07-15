@@ -15,27 +15,18 @@ except FileNotFoundError:
     print("❌ festivals.json 파일을 찾을 수 없습니다.")
     exit()
 
-# 💡 [핵심 수정] 전달받은 JSON 구조에 맞춰 데이터 목록 안전하게 추출하기
+# 💡 [안전장치 1] 공공데이터(TourAPI) 특유의 깊은 중첩 구조 자동 변환
 festivals = []
 if isinstance(raw_data, dict):
-    # 구조 1: 현재 전달받은 "items" 키 아래 리스트가 들어있는 구조 🌟 (해결책)
-    if 'items' in raw_data and isinstance(raw_data['items'], list):
-        festivals = raw_data['items']
-    
-    # 구조 2: 공공데이터(TourAPI) 원본 트리 구조 (response -> body -> items -> item)
-    elif 'response' in raw_data:
-        try:
-            items = raw_data['response']['body']['items']['item']
-            festivals = items if isinstance(items, list) else [items]
-        except (KeyError, TypeError):
-            festivals = [raw_data]
-            
-    # 구조 3: 그 외 일반 단일 객체
-    else:
+    # TourAPI 표준 트리 구조 탐색 (response -> body -> items -> item)
+    try:
+        items = raw_data['response']['body']['items']['item']
+        festivals = items if isinstance(items, list) else [items]
+    except (KeyError, TypeError):
+        # 중첩 구조가 없는 일반 단일 딕셔너리일 경우
         festivals = [raw_data]
-        
 elif isinstance(raw_data, list):
-    # 구조 4: 바로 리스트로 시작하는 구조
+    # 표준 배열 형태일 경우
     festivals = raw_data
 
 # 3. SQLite 연결 및 설정
@@ -55,13 +46,14 @@ INSERT OR REPLACE INTO festivals (
 # 4. 데이터 정제 및 파싱
 insert_data = []
 for index, item in enumerate(festivals):
+    # 각 아이템이 딕셔너리 형태인지 검사
     if not isinstance(item, dict):
         continue
 
     content_id = item.get('contentid')
     title = item.get('title')
 
-    # 필수 값(ID, 장소명) 누락 검사 및 스킵 처리
+    # 💡 [안전장치 2] 필수 값(ID, 장소명) 누락 검사 및 스킵 처리
     if not content_id or not title:
         print(f"⚠️ 경고: {index}번째 데이터에 필수값(contentid 또는 title)이 없어 제외합니다. (데이터: {item})")
         continue
