@@ -70,16 +70,6 @@ if __name__ == "__main__":
     course_data = get_course_data(selected_course_id)
     final_prompt = generate_llm_prompt(course_data)
     
-    # 💡 [개선] Gemini에게 쓸데없는 좌표 생성을 시키지 않고, 오직 message만 요구합니다.
-    final_prompt += """
-    
-    [출력 지시사항]
-    반드시 아래 JSON 형식으로만 출력해. 백틱(```json)이나 다른 설명은 절대 포함하지 마.
-    {
-        "message": "사용자님에게 추천 코스를 안내해 드립니다! ... (각 장소의 매력과 동선을 자연스럽게 연결한 로맨틱 스토리텔링 작성)"
-    }
-    """
-    
     print("\n✨ [최종 조립된 프롬프트 내용] ✨\n")
     print(final_prompt)
     
@@ -97,23 +87,23 @@ if __name__ == "__main__":
                 response_mime_type="application/json",
             )
         )
-        
+        print("\n🚀 Gemini API 응답 수신 완료! 🚀\n")
         # 1. LLM의 감성 멘트 파싱
         llm_result = json.loads(response.text)
         
         # 2. 신뢰할 수 있는 백엔드 DB 데이터와 안전하게 결합
         final_json_data = {
-            "message": llm_result.get("message", "두 분만을 위한 로맨틱한 코스를 준비했습니다!"),
-            "places": []
+        "message": llm_result["message"],
+        "places": []
         }
         
         for db_place in course_data["places"]:
             final_json_data["places"].append({
                 "name": db_place["title"],
-                "lat": float(db_place["mapy"]),
-                "lng": float(db_place["mapx"]),
-                "image_url": db_place["firstimage"],
-                "address": db_place["addr1"]
+                "lat": float(db_place.get("mapy", 0.0)),
+                "lng": float(db_place.get("mapx", 0.0)),
+                "image_url": db_place.get("firstimage", ""),
+                "address": db_place.get("addr1", "")
             })
 
         # 3. 최종 출력 확인
