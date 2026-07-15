@@ -186,19 +186,19 @@ def generate_llm_prompt(course_data):
 # ==========================================
 # 🚀 전체 파이프라인 실행
 # ==========================================
-if __name__ == "__main__":
-    # 1. 프론트엔드에서 사용자 응답 수집
-    answers = run_terminal_frontend()
+# if __name__ == "__main__":
+#     # 1. 프론트엔드에서 사용자 응답 수집
+#     answers = run_terminal_frontend()
     
-    # 2. 백엔드에서 알고리즘 돌리기 (최고 점수 코스 ID 반환)
-    selected_course_id = answers["preference"]
-    print(f"[서버 로그] 선택된 코스 ID: {selected_course_id}")
+#     # 2. 백엔드에서 알고리즘 돌리기 (최고 점수 코스 ID 반환)
+#     selected_course_id = answers["preference"]
+#     print(f"[서버 로그] 선택된 코스 ID: {selected_course_id}")
     
-    # 3. DB 조회 (가상의 데이터 반환)
-    course_data = get_course_data(selected_course_id)
+#     # 3. DB 조회 (가상의 데이터 반환)
+#     course_data = get_course_data(selected_course_id)
     
-    # 4. LLM 프롬프트 조립
-    final_prompt = generate_llm_prompt(course_data)
+#     # 4. LLM 프롬프트 조립
+#     final_prompt = generate_llm_prompt(course_data)
     
-    print("\n✨ [최종 LLM API로 전송될 프롬프트] ✨\n")
-    print(final_prompt)
+#     print("\n✨ [최종 LLM API로 전송될 프롬프트] ✨\n")
+#     print(final_prompt)
