@@ -17,13 +17,13 @@ if not GEMINI_API_KEY:
     raise RuntimeError("GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Gemini 3.5 Flash 모델 초기화 (JSON 출력 강제 옵션 추가)
+# Gemini 1.5 Flash 모델 초기화 (정확한 모델명으로 수정 & JSON 출력 강제 옵션 추가)
 generation_config = {
     "temperature": 0.7,
     "response_mime_type": "application/json", # 프론트엔드 연동을 위해 JSON 형식으로만 응답하게 강제
 }
 model = genai.GenerativeModel(
-    model_name="gemini-3.5-flash",
+    model_name="gemini-1.5-flash", 
     generation_config=generation_config
 )
 
@@ -52,21 +52,46 @@ class ChatResponse(BaseModel):
 # 2. 내부 데이터 및 헬퍼 함수 (앞서 만든 알고리즘 활용)
 # ==========================================
 def get_course_data(selected_course_id: str) -> Dict[str, Any]:
-    # 실제 환경에서는 SQLite(SQLAlchemy)를 통해 조회해야 합니다. 
-    # 여기서는 빠른 구현을 위해 하드코딩된 DB를 사용합니다.
+    # 5개의 마스터 코스 데이터를 모두 채워 넣었습니다.
     course_pool = {
         "course_A": {
             "name": "대청호 물길 힐링 코스", 
             "places": [
                 {"title": "대청호자연수변공원", "addr1": "대전광역시 동구 추동 328", "mapy": "36.372645", "mapx": "127.474717", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/55/3542255_image2_1.jpg"},
-                {"title": "카페 팡시온", "addr1": "대전광역시 동구 회남로275번길 227", "mapy": "36.377814", "mapx": "127.504067", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/64/2767064_image2_1.jpg"}
+                {"title": "카페 팡시온", "addr1": "대전광역시 동구 회남로275번길 227", "mapy": "36.377814", "mapx": "127.504067", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/64/2767064_image2_1.jpg"},
+                {"title": "더리스", "addr1": "대전광역시 동구 냉천로 34-8", "mapy": "36.386122", "mapx": "127.484101", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/16/2735316_image2_1.jpg"}
+            ]
+        },
+        "course_B": {
+            "name": "도룡동 실내 액티비티 코스", 
+            "places": [
+                {"title": "스몹 대전", "addr1": "대전광역시 유성구 엑스포로 1 신세계백화점 6층", "mapy": "36.375101", "mapx": "127.382065", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/95/3535595_image2_1.png"},
+                {"title": "더 빛나", "addr1": "대전광역시 유성구 엑스포로 131", "mapy": "36.375349", "mapx": "127.394130", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/14/2767214_image2_1.jpg"},
+                {"title": "대전신세계 Art&Science점", "addr1": "대전광역시 유성구 엑스포로 1", "mapy": "36.375181", "mapx": "127.381765", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/92/4023492_image2_1.jpg"}
             ]
         },
         "course_C": {
             "name": "소제동 레트로 감성 코스", 
             "places": [
                 {"title": "테미오래", "addr1": "대전광역시 중구 보문로205번길 13", "mapy": "36.320666", "mapx": "127.423268", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/27/3505827_image2_1.jpg"},
-                {"title": "치앙마이방콕", "addr1": "대전광역시 동구 철갑3길 8", "mapy": "36.334229", "mapx": "127.437747", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/18/2865818_image2_1.jpg"}
+                {"title": "치앙마이방콕", "addr1": "대전광역시 동구 철갑3길 8", "mapy": "36.334229", "mapx": "127.437747", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/18/2865818_image2_1.jpg"},
+                {"title": "볕 (수플레 카페)", "addr1": "대전광역시 동구 수향2길 7", "mapy": "36.335524", "mapx": "127.437061", "firstimage": ""}
+            ]
+        },
+        "course_D": {
+            "name": "도심 속 재즈&맥주 페스타 코스", 
+            "places": [
+                {"title": "유성재즈&맥주페스타", "addr1": "대전광역시 유성구 어은로 27 유림공원 일원", "mapy": "36.360730", "mapx": "127.357706", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/23/3338823_image2_1.jpg"},
+                {"title": "1984그수육집칼국수", "addr1": "대전광역시 유성구 원신흥남로42번길 5-22", "mapy": "36.337211", "mapx": "127.338686", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/21/4057021_image2_1.jpg"},
+                {"title": "유성온천 족욕체험장", "addr1": "대전광역시 유성구 봉명동 574", "mapy": "36.355044", "mapx": "127.345432", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/22/3350822_image2_1.jpg"}
+            ]
+        },
+        "course_E": {
+            "name": "공주 야밤 맥주축제 드라이브 코스", 
+            "places": [
+                {"title": "공주야밤 맥주축제", "addr1": "충청남도 공주시 금벽로 368 공주 금강신관공원 일원", "mapy": "36.470245", "mapx": "127.127538", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/09/3520309_image2_1.jpg"},
+                {"title": "공주 공산성", "addr1": "충청남도 공주시 웅진로 280", "mapy": "36.462949", "mapx": "127.126790", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/41/3404541_image2_1.jpg"},
+                {"title": "베이커리 밤마을", "addr1": "충청남도 공주시 백미고을길 5-13", "mapy": "36.464625", "mapx": "127.122924", "firstimage": "http://tong.visitkorea.or.kr/cms/resource/75/2834375_image2_1.jpg"}
             ]
         }
     }
@@ -138,4 +163,4 @@ async def generate_dating_course(user_answers: UserAnswers):
         print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail="코스 추천 중 오류가 발생했습니다.")
 
-# 서버 실행 (터미널 명령어): uvicorn main:app --reload
+# 서버 실행 (터미널 명령어): uvicorn prompt:app --reload
