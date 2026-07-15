@@ -1,8 +1,8 @@
 import http from './http'
 import { SEED_REVIEWS } from '../data/courses'
 
-// 백엔드(FastAPI) 준비 전까지 목 데이터로 동작. 연동 시 false로 전환.
-const USE_MOCK = true
+// 백엔드(FastAPI :8000) 연동. 문제가 있을 때만 true로 되돌려 목으로 개발.
+const USE_MOCK = false
 
 const delay = (ms = 250) => new Promise((r) => setTimeout(r, ms))
 
@@ -71,19 +71,31 @@ export async function verifyPassword(reviewId, password) {
   }
 }
 
-// PUT /reviews/{reviewId}
-export async function updateReview(reviewId, { nickname, rating, text, password }) {
+// PUT /reviews/{reviewId} — password는 권한 확인용, newPassword는 비밀번호 변경용(선택)
+export async function updateReview(reviewId, { nickname, rating, text, password, newPassword }) {
   if (USE_MOCK) {
     await delay()
     const found = findReview(reviewId)
     if (!found) throw new Error('리뷰를 찾을 수 없어요.')
+    if (found.review.password !== password) throw new PasswordMismatchError()
     Object.assign(found.review, { nickname, rating, text })
-    if (password) found.review.password = password
+    if (newPassword) found.review.password = newPassword
     const { password: _, ...rest } = found.review
     return rest
   }
-  const { data } = await http.put(`/reviews/${reviewId}`, { nickname, rating, text, password })
-  return data
+  try {
+    const { data } = await http.put(`/reviews/${reviewId}`, {
+      nickname,
+      rating,
+      text,
+      password,
+      new_password: newPassword || null,
+    })
+    return data
+  } catch (err) {
+    if (err.response?.status === 403) throw new PasswordMismatchError()
+    throw err
+  }
 }
 
 // DELETE /reviews/{reviewId}
