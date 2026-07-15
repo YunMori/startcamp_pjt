@@ -24,10 +24,11 @@ generation_config = {
     "temperature": 0.7,
     "response_mime_type": "application/json", # 프론트엔드가 쓰기 편하게 JSON으로 응답 강제
 }
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config
-)
+# model = genai.GenerativeModel(
+#     model_name="gemini-1.5-flash",
+#     generation_config=generation_config
+# )
+model = genai.GenerativeModel('gemini-1.5-flash')
 # ==========================================
 # 2. JSON 데이터 전처리 파이프라인
 # ==========================================
