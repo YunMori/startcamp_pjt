@@ -1,12 +1,16 @@
 import os
 import json
 from dotenv import load_dotenv
-import google.generativeai as genai
 
-# 개발자님이 만드신 모듈 임포트
+# ❌ 기존 임포트 삭제
+# import google.generativeai as genai 
+
+# ✅ 새로운 임포트 추가
+from google import genai
+from google.genai import types
+
 from prepro import preprocess_poi_data
 from user_type_select import generate_llm_prompt, get_course_data, run_terminal_frontend
-
 
 # ==========================================
 # 1. API 키 로드 및 Gemini 설정
@@ -18,16 +22,10 @@ if not GEMINI_API_KEY:
     print("🚨 에러: .env 파일에 GEMINI_API_KEY가 없습니다!")
     exit()
 
-# Gemini 모델 설정
-genai.configure(api_key=GEMINI_API_KEY)
-generation_config = {
-    "temperature": 0.7,
-    "response_mime_type": "application/json", # 프론트엔드가 쓰기 편하게 JSON으로 응답 강제
-}
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config
-)
+# ✅ 새로운 클라이언트 초기화 방식
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+
 # model = genai.GenerativeModel('gemini-1.5-flash')
 # ==========================================
 # 2. JSON 데이터 전처리 파이프라인
@@ -105,15 +103,22 @@ if __name__ == "__main__":
     print(final_prompt)
     
     # ==========================================
-    # 4. Gemini 3.5 Flash 호출 및 응답 출력
+    # 4. Gemini 1.5 Flash 호출 및 응답 출력
     # ==========================================
     print("\n🚀 Gemini API로 데이터를 전송하고 맞춤형 스토리를 생성 중입니다...\n")
     
     try:
-        response = model.generate_content(final_prompt)
+        # ✅ 새로운 API 호출 방식
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=final_prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                response_mime_type="application/json",
+            )
+        )
         print("🎉 [Gemini의 최종 응답 (완벽한 JSON 형태)] 🎉\n")
         
-        # 반환된 텍스트가 유효한 JSON인지 파싱해서 깔끔하게 출력
         response_json = json.loads(response.text)
         print(json.dumps(response_json, indent=4, ensure_ascii=False))
         
