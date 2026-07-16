@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(BASE_DIR)
 PRE_RESULT_DIR = os.path.join(REPO_ROOT, "pre_result")
 
-load_dotenv(os.path.join(REPO_ROOT, ".env"))
+load_dotenv(os.path.join(REPO_ROOT, ".env"), override=True)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 try:
