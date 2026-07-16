@@ -41,7 +41,8 @@ onMounted(async () => {
     })
 
     map.setBounds(bounds, 24, 24, 24, 24)
-  } catch {
+  } catch (e) {
+    console.error('[KakaoMiniMap]', e)
     failed.value = true
   }
 })
