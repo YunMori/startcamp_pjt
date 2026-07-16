@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env # GEMINI_API_KEY 주입
+    volumes:
+      - dbdata:/app/backend/db # 리뷰 데이터 영속화
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: front/Dockerfile
+      args:
+        VITE_API_BASE_URL: /
+        VITE_KAKAO_JS_KEY: ${VITE_KAKAO_JS_KEY} # 루트 .env에서 자동 로드
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  dbdata:

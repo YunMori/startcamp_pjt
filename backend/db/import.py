@@ -23,8 +23,12 @@ if isinstance(raw_data, dict):
         items = raw_data['response']['body']['items']['item']
         festivals = items if isinstance(items, list) else [items]
     except (KeyError, TypeError):
-        # 중첩 구조가 없는 일반 단일 딕셔너리일 경우
-        festivals = [raw_data]
+        # {region, contentType, ..., items: [...]} 형태의 전처리 산출물 대응
+        if isinstance(raw_data.get('items'), list):
+            festivals = raw_data['items']
+        else:
+            # 중첩 구조가 없는 일반 단일 딕셔너리일 경우
+            festivals = [raw_data]
 elif isinstance(raw_data, list):
     # 표준 배열 형태일 경우
     festivals = raw_data
