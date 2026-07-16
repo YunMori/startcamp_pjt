@@ -1,14 +1,28 @@
 <script setup>
-defineProps({
+import { ref, watch } from 'vue'
+
+const props = defineProps({
   region: { type: Object, required: true },
 })
+
+const imgError = ref(false)
+watch(() => props.region, () => { imgError.value = false })
 </script>
 
 <template>
   <div>
     <div class="photo">
-      <span class="photo-emoji">{{ region.emoji }}</span>
-      <span class="photo-label">지역·축제 대표 사진</span>
+      <img
+        v-if="region.image && !imgError"
+        class="photo-img"
+        :src="region.image"
+        :alt="region.name"
+        @error="imgError = true"
+      />
+      <template v-else>
+        <span class="photo-emoji">{{ region.emoji }}</span>
+        <span class="photo-label">지역·축제 대표 사진</span>
+      </template>
     </div>
     <div v-if="region.isFestival" class="period">📅 축제 기간 {{ region.period }}</div>
     <p class="desc">{{ region.desc }}</p>
@@ -28,6 +42,12 @@ defineProps({
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+
+.photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .photo-emoji {
