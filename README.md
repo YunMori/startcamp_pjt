@@ -114,26 +114,26 @@ API 개요
 
 
 ```
-## 2) 나의 기여 (YunMori)
-
-
-## 나의 기여
+## 나의 기여 (YunMori)
 
 ### Frontend 초기 구축
 Vue 3(Composition API) + Vite 기반으로 프론트엔드 전체를 처음부터 설계·구현했습니다. 챗봇 UI(ChatHeader/ChatMessageList/ChatInput), 설문 칩 선택(ChipsMessage), 코스 추천 카드(CourseCard/CourseCards), Kakao 지도 미니맵(KakaoMiniMap), 사이드 패널(지역정보/리뷰 CRUD/비밀번호 검증) 등 30여 개 컴포넌트와 composable 기반 상태관리(useChatStore/usePanelStore/useReviewStore), axios 서비스 레이어(chatApi/reviewApi)를 구성했습니다. 백엔드가 없는 단계에서도 목(mock) 데이터로 전체 사용자 플로우가 동작하도록 설계해 프론트-백엔드 개발을 병렬로 진행할 수 있게 했습니다.
 
-### 백엔드-AI 챗봇 연동
-팀원이 프로토타입으로 작성한 성향 기반 추천 알고리즘(`user_type_select.py`)을 FastAPI에서 바로 쓸 수 있는 순수 함수 모듈(`recommend.py`)로 이식했습니다. 설문 답변에 대한 점수 계산, 이동수단/축제 여부에 따른 하드 필터링, Gemini 기반 코스 스토리텔링·자유 채팅 생성, API 키 부재·할당량 초과(429) 시 폴백 응답까지 포함해 안정적으로 동작하도록 만들었습니다. 이 과정에서 `app.py`의 라우터·스키마를 프론트 계약(`{messages} → {reply}` 등)에 맞춰 재정비했습니다.
+### Git 브랜치 전략 및 병합 관리
+`master`/`dev`/`BE`/`front`/`lcy` 5개로 나뉜 팀 작업 브랜치를 통합하는 역할을 맡아, 수많은 브랜치 병합을 직접 수행했습니다. 백엔드 라우터, `requirements.txt`, `.gitignore`가 브랜치마다 다르게 바뀌면서 발생한 3-way merge 충돌을 여러 차례 해결했고, 병합이 꼬였을 때는 "폭탄해체중"이라는 커밋 메시지를 남길 정도로 얽힌 상태를 하나씩 풀어가며 정리했습니다.
+
+다만 병합을 반복하는 과정에서 각 브랜치의 `.gitignore`가 서로 어긋나 있었고, 그 사이로 `front/node_modules`, 빌드 산출물(`dist`), `.env`(API 키 포함), `festival.db` 같은 파일들이 여러 커밋에 걸쳐 히스토리에 섞여 들어갔습니다. 뒤늦게 이를 추적 해제(`git rm --cached`)했지만, 이미 과거 커밋에 남아있는 비밀 키는 그것만으로 지워지지 않았습니다. 결국 원본 저장소는 시크릿이 포함된 상태로 남겨두고, 커밋 히스토리를 재작성해 시크릿을 제거한 별도 GitHub 미러 저장소를 새로 만드는 것으로 수습해야 했습니다. 여러 브랜치가 얽힌 협업에서는 `.gitignore`를 초반부터 브랜치 간에 통일해두지 않으면, 병합이 누적될수록 되돌리기 어려운 상태가 된다는 것을 직접 겪으며 배웠습니다.
 
 ### 리뷰 기능 프론트-백엔드 통합
-프론트가 기대하는 응답 형태(`id/nickname/rating/text/date`)에 맞춰 백엔드 리뷰 CRUD와 프론트 리뷰 컴포넌트(ReviewBoard/ReviewForm/PasswordGate)를 연결하고, 기존 DB에 `created_at` 컬럼이 없을 경우 자동 마이그레이션하는 로직을 추가해 팀원이 쌓아둔 축제 데이터를 보존하면서 스키마를 확장했습니다.
+프론트가 기대하는 응답 형태(`id/nickname/r`) 엔드 리뷰 CRUD와 프론트 리뷰컴포넌트(`ReviewBoard/ReviewForm/PasswordGate`)를 연결하고, 기존 DB에 `created_at` 컬럼이 없을 경우 자동
+마이그레이션하는 로직을 추가해 팀원이 쌓아 스키마를 확장했습니다.
 
 ### 배포 환경 구성
-nginx + FastAPI 2-container Docker Compose 구성을 처음부터 설계했습니다. nginx가 정적 파일을 서빙하면서 `/api`, `/chat`, `/courses`, `/reviews`만 백엔드로 리버스 프록시하도록 만들어 외부에는 80 포트만 노출되게 했고, 리뷰 데이터는 Docker volume으로 영속화했습니다. AWS EC2 배포 절차(Elastic IP, 보안그룹, 스왑 설정, Kakao 도메인 등록)를 `DEPLOY.md`로 문서화해 팀원 누구나 동일하게 배포할 수 있도록 했습니다.
+nginx + FastAPI 2-container Docker Compose 구성을 설계했습니다. nginx가 정적 파일을 서빙하면서 `/api`,
+`/chat`, `/courses`, `/reviews`만 백엔드로  외부에는 80 포트만 노출되게 했고, 리뷰데이터는 Docker volume으로 영속화했습니다. AWS EC2 배포 절차(Elastic IP, 보안그룹, 스왑 설정, Kakao 도메인
+등록)를 `DEPLOY.md`로 문서화해 팀원 누구나 했습니다.
 
 ### 기타
 - Kakao 지도 미니맵 렌더링 버그 수정
 - 추천 코스 패널에 코스 동선(방문 장소 목록) 표시 기능 추가
 - 지역 정보 패널에 이미지 연결
-- `.env`, DB 파일 등 민감/생성 파일 Git 추적 해제 및 `.gitignore` 정리
-
