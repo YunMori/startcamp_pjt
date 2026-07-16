@@ -3,6 +3,7 @@ import { computed, reactive, watch } from 'vue'
 import { usePanelStore } from '../../stores/usePanelStore'
 import { useReviewStore } from '../../stores/useReviewStore'
 import RegionInfo from './RegionInfo.vue'
+import CourseSpots from './CourseSpots.vue'
 import ReviewBoard from './ReviewBoard.vue'
 import ReviewDetail from './ReviewDetail.vue'
 import ReviewForm from './ReviewForm.vue'
@@ -94,6 +95,8 @@ async function handleEdit(form) {
 
     <div v-if="course" class="scroll">
       <RegionInfo :region="region" />
+
+      <CourseSpots :spots="course.spots" :duration="course.duration" />
 
       <div class="review-head">
         <div class="review-title">
