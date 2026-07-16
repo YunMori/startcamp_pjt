@@ -19,12 +19,15 @@ def preprocess_poi_data(json_data):
         try:
             # 2. 필수 필드 추출 및 타입 변환
             cleaned_item = {
-                "id": item.get("contentid", ""),
-                "title": item.get("title", ""),
-                "address": item.get("addr1", ""),      # 주소가 없을 경우 "" 유지
-                "image": item.get("firstimage", ""),   # 이미지가 없을 경우 "" 유지
-                "lat": float(mapy),                    # 위도 (문자열 -> 실수 변환)
-                "lng": float(mapx)                     # 경도 (문자열 -> 실수 변환)
+                "contentid": item.get("contentid"),
+                "title": item.get("title"),
+                "addr1": item.get("addr1", "주소 정보 없음"),
+                "addr2": item.get("addr2", "상세주소 정보 없음"),
+                "tel": item.get("tel", "번호 정보 없음"), # 기존 데이터에 tel 필드 보존 확인 필요
+                "firstimage": item.get("firstimage", ""),
+                "firstimage2": item.get("firstimage2", ""),
+                "mapx": float(item.get("mapx", 0.1)),
+                "mapy": float(item.get("mapy", 0.1)),
             }
             processed_data.append(cleaned_item)
             

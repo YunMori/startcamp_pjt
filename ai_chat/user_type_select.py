@@ -109,10 +109,15 @@ def get_course_data(selected_course_id: str) -> Dict[str, Any]:
                         # 중복 추가 방지
                         if item.get("title") not in [p['title'] for p in found_places]:
                             found_places.append({
+                                "contentid": item.get("contentid"),
                                 "title": item.get("title"),
-                                "addr1": item.get("address", "주소 정보 없음"),
-                                "tel": "정보없음", # 기존 데이터에 tel 필드 보존 확인 필요
-                                "firstimage": item.get("image", "")
+                                "addr1": item.get("addr1", "주소 정보 없음"),
+                                "addr2": item.get("addr2", "상세주소 정보 없음"),
+                                "tel": item.get("tel", "번호 정보 없음"), # 기존 데이터에 tel 필드 보존 확인 필요
+                                "firstimage": item.get("firstimage", ""),
+                                "firstimage2": item.get("firstimage2", ""),
+                                "mapx": item.get("mapx", 0.2),
+                                "mapy": item.get("mapy", 0.2)
                             })
             except json.JSONDecodeError:
                 continue
@@ -125,7 +130,7 @@ def get_course_data(selected_course_id: str) -> Dict[str, Any]:
         "course_D": "유성 도심 축제 데이트 코스",
         "course_E": "공주 역사 & 야밤 축제 코스"
     }
-
+    found_places.sort(key=lambda x: target_titles.index(x["title"]) if x["title"] in target_titles else 999)
     return {
         "name": course_names.get(selected_course_id, "추천 데이트 코스"),
         "places": found_places
