@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+front/node_modules
+front/dist
+**/__pycache__
+**/*.db
+**/*.sqlite
+ai_chat/
+data/
+test.txt
+*.md
+.DS_Store
